@@ -4,9 +4,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"log"
-	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/conn/mmr"
-	"periph.io/x/periph/conn/physic"
+	"periph.io/x/conn/v3/i2c"
+	"periph.io/x/conn/v3/mmr"
+	"periph.io/x/conn/v3/physic"
 	"time"
 )
 
@@ -23,7 +23,7 @@ var DefaultAccelerometerOpts = AccelerometerOpts{
 }
 
 // New accelerometer opens a handle to an LSM303 accelerometer sensor.
-func NewAccelerometer(bus i2c.Bus, opts *AccelerometerOpts) (*Accelerometer, error) {
+func NewAccelerometer(bus i2c.BusCloser, opts *AccelerometerOpts) (*Accelerometer, error) {
 	device := &Accelerometer{
 		mmr: mmr.Dev8{
 			Conn: &i2c.Dev{Bus: bus, Addr: uint16(ACCELEROMETER_ADDRESS)},
@@ -100,15 +100,15 @@ func (accelerometer *Accelerometer) SenseRaw() (int16, int16, int16, error) {
 	return xValue, yValue, zValue, nil
 }
 
-func (accelerometer *Accelerometer) Sense() (physic.Force, physic.Force, physic.Force, error) {
+func (accelerometer *Accelerometer) Sense() (physic.Acceleration, physic.Acceleration, physic.Acceleration, error) {
 	xValue, yValue, zValue, err := accelerometer.SenseRaw()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 	multiplier := getMultiplier(accelerometer.mode, accelerometer.range_)
-	xAcceleration := (physic.Force)(int64(xValue) * multiplier)
-	yAcceleration := (physic.Force)(int64(yValue) * multiplier)
-	zAcceleration := (physic.Force)(int64(zValue) * multiplier)
+	xAcceleration := (physic.Acceleration)(int64(xValue) * multiplier)
+	yAcceleration := (physic.Acceleration)(int64(yValue) * multiplier)
+	zAcceleration := (physic.Acceleration)(int64(zValue) * multiplier)
 
 	return xAcceleration, yAcceleration, zAcceleration, nil
 }
